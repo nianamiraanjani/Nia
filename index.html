@@ -47,8 +47,20 @@ label{font-size:12px;color:var(--mut);display:block;margin-bottom:3px}
 #lock.on{display:flex}#lock .card{width:100%;max-width:320px;text-align:center}
 #ts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom,0px));background:var(--btn);color:var(--btnt);padding:10px 16px;border-radius:999px;z-index:30;display:none;font-size:14px}
 #nav{overflow-x:auto}#nav button{font-size:11.5px;padding:12px 0;min-width:48px}details.card>summary::-webkit-details-marker{display:none}
+
+#nia-gate{position:fixed;inset:0;z-index:99999;background:#f2f8f4;color:#0f2a20;display:flex;align-items:center;justify-content:center;padding:20px;font:15px/1.5 system-ui,sans-serif}
+@media (prefers-color-scheme:dark){#nia-gate{background:#0a1913;color:#e5f3ea}#nia-gate input{background:#11251c;color:#e5f3ea;border-color:#21402f}}
+#nia-gate .bx{width:100%;max-width:340px}
+#nia-gate h1{font-size:26px;margin:0 0 4px}#nia-gate p{margin:0 0 14px;opacity:.75;font-size:13.5px}
+#nia-gate input{width:100%;padding:12px;margin:0 0 10px;border:1px solid #cfe8dc;border-radius:12px;font:inherit;font-size:16px}
+#nia-gate button{width:100%;padding:12px;border:0;border-radius:12px;background:#047857;color:#fff;font:inherit;font-weight:600;margin-bottom:8px}
+#nia-gate button.l{background:transparent;color:#047857;font-weight:500}
+#nia-gate .er{color:#b45309;font-size:13px;min-height:20px;margin-bottom:6px}
+#nia-chip{position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);right:8px;z-index:9998;border:0;border-radius:99px;padding:5px 10px;font:12px system-ui,sans-serif;background:#d1fae5;color:#065f46;opacity:.9}
 </style></head>
 <body>
+<div id="nia-gate"><div class="bx"><h1>Nia Life 🌿</h1><p id="gm">Memuat…</p></div></div>
+
 <div id="lock"></div>
 <div class="w"><header><h1>Nia Namira Anjani</h1><span class="m" id="dt"></span></header><div id="sub"></div><main id="app"></main></div>
 <button id="fab" aria-label="Tambah" onclick="pick()">+</button>
@@ -381,4 +393,83 @@ const c=y.cfg||{};["sym","mt","txt","pLo","pHi","fast","libur","paid","fm","bm",
 const V0l=V.lain;V.lain=()=>mintSet()+V0l();
 
 draw();lockUI();
-</script></body></html>
+</script><script>
+(function(){
+var URL_='https://rwzbcpslbjwlcbwydfli.supabase.co',KEY_='sb_publishable_I77KfbcdTBsirkhjWmc0OQ_G5YEHAiG';
+var KEYS=['nm1','nialife_skripsi_v1'];
+var gate=document.getElementById('nia-gate'),box=gate.querySelector('.bx'),uid,sess,busy=false,chip,lastErr='';
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}}
+function snap(){return KEYS.map(function(k){return ls(k)||''}).join('\u0001')}
+function hs(s){var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return String(h)}
+function msg(t){box.innerHTML='<h1>Nia Life 🌿</h1><p>'+t+'</p>'}
+async function api(path,opt,tok){
+ opt=opt||{};var h={'apikey':KEY_,'Content-Type':'application/json'};
+ if(tok)h['Authorization']='Bearer '+tok;if(opt.prefer)h['Prefer']=opt.prefer;
+ var r=await fetch(URL_+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined});
+ var t=await r.text(),j=null;try{j=t?JSON.parse(t):null}catch(e){}
+ return {ok:r.ok,status:r.status,json:j};
+}
+function errText(r){var j=r.json||{};return j.msg||j.error_description||j.message||j.error||('HTTP '+r.status)}
+function saveSess(d){sess={access_token:d.access_token,refresh_token:d.refresh_token,expires_at:Math.floor(Date.now()/1000)+(d.expires_in||3600),email:(d.user&&d.user.email)||(sess&&sess.email)||'',uid:(d.user&&d.user.id)||(sess&&sess.uid)};ls('nia_sess',JSON.stringify(sess))}
+async function token(){
+ if(!sess)return null;
+ if(sess.expires_at-60>Date.now()/1000)return sess.access_token;
+ try{var r=await api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:sess.refresh_token}});
+  if(r.ok&&r.json&&r.json.access_token){saveSess(r.json);return sess.access_token}
+  if(r.status>=400&&r.status<500){ls('nia_sess',null);location.reload();return null}
+ }catch(e){}
+ return sess.access_token}
+function form(note){
+ box.innerHTML='<h1>Nia Life 🌿</h1><p>Masuk dengan email dan PIN/kata sandi. Data tersimpan aman di akunmu.</p><input id="ge" type="email" placeholder="Email" autocomplete="email" autocapitalize="none"><input id="gp" type="password" placeholder="PIN / kata sandi" autocomplete="current-password"><div class="er" id="gr">'+(note||'')+'</div><button id="gi">Masuk</button><button class="l" id="gc">Cek koneksi ke server</button>';
+ var er=function(t){document.getElementById('gr').textContent=t};
+ document.getElementById('gc').onclick=async function(){er('Mengecek…');try{var r=await api('/auth/v1/settings');er(r.ok?'Koneksi OK (server menjawab '+r.status+').':'Server menjawab '+r.status+': '+errText(r))}catch(e){er('Tidak bisa menyambung: '+e.name+': '+e.message)}};
+ document.getElementById('gi').onclick=async function(){
+  var email=document.getElementById('ge').value.trim().toLowerCase(),password=document.getElementById('gp').value;
+  if(!email||password.length<6){er('Isi email dan PIN/kata sandi minimal 6 karakter.');return}
+  er('Memproses…');
+  try{var r=await api('/auth/v1/token?grant_type=password',{method:'POST',body:{email:email,password:password}});
+   if(!r.ok){er('Gagal masuk ('+r.status+'): '+errText(r));return}
+   saveSess(r.json);start()
+  }catch(e){er('Tidak bisa menyambung ke server ('+e.name+': '+e.message+'). Coba matikan VPN atau pemblokir iklan, lalu ulangi.')}
+ };
+}
+async function pull(){
+ var t=await token();if(!t)return{error:'sesi'};
+ try{var r=await api('/rest/v1/nia_data?select=data,updated_at&user_id=eq.'+uid,{},t);
+  if(!r.ok)return{error:errText(r)};
+  return{data:(r.json&&r.json[0])||null}}catch(e){return{error:'offline'}}}
+async function push(){
+ if(busy||!uid)return;busy=true;
+ try{var t=await token();if(!t){busy=false;return}
+  var o={},s=snap();KEYS.forEach(function(k){var v=ls(k);if(v!=null)o[k]=v});
+  var ts=new Date().toISOString();
+  var r=await api('/rest/v1/nia_data?on_conflict=user_id',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{user_id:uid,data:o,updated_at:ts}},t);
+  if(r.ok){ls('nia_sync_ts',ts);ls('nia_sync_h',hs(s));lastErr='';st('☁️ ✓')}else{lastErr=errText(r);st('☁️ !')}
+ }catch(e){lastErr='offline';st('☁️ offline')}
+ busy=false}
+function st(t){if(chip)chip.textContent=t}
+function apply(row){KEYS.forEach(function(k){if(row.data&&row.data[k]!=null)ls(k,row.data[k])});ls('nia_sync_ts',row.updated_at);ls('nia_sync_h',hs(snap()));location.reload()}
+async function check(first){
+ if(!uid)return;
+ var r=await pull();if(r.error){lastErr=r.error;st(r.error==='offline'?'☁️ offline':'☁️ !');return}
+ var row=r.data,meta=ls('nia_sync_ts'),sh=ls('nia_sync_h'),dirty=hs(snap())!==sh,has=KEYS.some(function(k){return ls(k)});
+ if(!row){await push();return}
+ if(first&&!meta&&has){if(confirm('Data di akun ditemukan.\nOK = pakai data akun (data di HP ini diganti).\nBatal = unggah data HP ini ke akun.'))apply(row);else await push();return}
+ if(!meta||row.updated_at>meta){if(!dirty||!meta||confirm('Ada data lebih baru di akun, tapi HP ini juga punya perubahan. OK = pakai data akun. Batal = timpa akun dengan data HP ini.'))apply(row);else await push();return}
+ if(dirty)await push();else st('☁️ ✓')}
+function start(){
+ uid=sess.uid;gate.style.display='none';
+ chip=document.createElement('button');chip.id='nia-chip';chip.textContent='☁️ …';document.body.appendChild(chip);
+ chip.onclick=async function(){if(!confirm('Akun: '+sess.email+(lastErr?'\nStatus sinkron: '+lastErr:'')+'\n\nKeluar dari akun? Data di HP ini dihapus demi keamanan (tetap aman di akun).'))return;await push();KEYS.concat(['nia_sync_ts','nia_sync_h','nia_sess']).forEach(function(k){ls(k,null)});try{var t=sess.access_token;await api('/auth/v1/logout',{method:'POST'},t)}catch(e){}location.reload()};
+ check(true);
+ setInterval(function(){if(hs(snap())!==ls('nia_sync_h'))push()},4000);
+ document.addEventListener('visibilitychange',function(){if(document.hidden){if(hs(snap())!==ls('nia_sync_h'))push()}else check(false)});
+}
+(function(){
+ if(URL_.indexOf('http')!==0){msg('Pengaturan akun belum diisi.');return}
+ try{sess=JSON.parse(ls('nia_sess'))}catch(e){}
+ if(sess&&sess.access_token&&sess.uid)start();else form();
+})();
+})();
+</script>
+</body></html>
